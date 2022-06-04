@@ -1,13 +1,19 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
+
+const {validarCampos, validarJWT, esAdminRole, tieneRol} = require('../middlewares');
+
 const { esRoleValido, emailExiste, existeUsuarioPorId } = require('../helpers/db-validators');
-const { validarCampos } = require('../middlewares/validar-campos');
 const { usuariosGet, usuariosPost, usuariosDelete, usuariosPut, usuariosPatch } = require('../controllers/usuarios');
 
 const router = Router();
 
 
 router.get('/', usuariosGet );
+
+// segun documentacion (https://express-validator.github.io/docs/check-api.html)
+// Se recomienda no usar check sino los otros metodos, ya que check verifica en el body, header, etc. Y puede que uno espere
+// los parametros en body y se los manden en el header y los recupera el check, ver preguntas en video 145 curso node 
 
 router.put('/:id',[
   check('id', 'No es un ID válido').isMongoId(),
@@ -29,6 +35,9 @@ router.post('/',[
 ], usuariosPost);
 
 router.delete('/:id',[
+  validarJWT,
+  // esAdminRole,
+  tieneRol('ADMIN_ROLE','VENTAS_ROLE'),
   check('id', 'No es un ID válido').isMongoId(),
   check('id').custom( existeUsuarioPorId ),
   validarCampos
